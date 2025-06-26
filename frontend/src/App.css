@@ -1,0 +1,121 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+h1 {
+  margin: 20px 0;
+  padding-top: 10px;
+  color: black;
+}
+
+.chessboardWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+}
+
+.chessboardInner {
+  display: flex;
+  margin: 0 auto;
+  width: fit-content;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.spellbook {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+
+.chessboardRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.sidePanel {
+  background-color: rgb(110, 99, 99);
+  padding: 10px;
+  border-radius: 8px;
+  border-color: black;
+  font-size: 25px;
+  height: 600px;
+  width: 300px;
+  color: white;
+}
+
+.evaluationText {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: left;
+  padding-left: 10px;
+  margin-bottom: 10px;
+}
+
+.moveLogsContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.log {
+  text-align: left;
+  flex: 1;
+  padding: 10px;
+  color: white;
+}
+
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

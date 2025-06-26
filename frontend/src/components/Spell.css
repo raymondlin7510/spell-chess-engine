@@ -1,0 +1,23 @@
+.spell {
+    margin: 10px;
+    padding: 0;
+    background-color: rgb(86, 175, 86);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.numLeft {
+    color: white;
+    font-size: 20px;
+    padding-right: 20px;
+    border-color: black;
+    font-weight: bold;
+}
+
+.spellImage {
+    width: 50px;
+    height: auto;
+}
