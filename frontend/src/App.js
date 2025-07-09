@@ -6,14 +6,21 @@ import SpellBook from "./components/SpellBook";
 import "./App.css";
 
 function App() {
-  const [game] = useState(new Chess());
+  const [game, setGame] = useState(new Chess());
   const [bestMove, setBestMove] = useState("e5");
   const [evaluation, setEvaluation] = useState("+0.7");
+
   const whiteLog = [["e4", "+0.1"], ["Nf3", "+0.2"], ["Bc4", "+0.1"]];
   const blackLog = [["c5", "+0.2"], ["e6", "+0.7"], ["Nf6", "-0.7"]];
   const [whiteSpellBook, setWhiteSpellBook] = useState([[2, 0], [2, 0]]);
   const [blackSpellBook, setBlackSpellBook] = useState([[1, 1], [2, 0]]);
-
+  /*  function ondropPiece
+        change the game
+        call the function to get the best move possible, ask for the evaluation
+        add to whatever log the info from the previous
+        update the spellBook
+        change the game
+  */
   return (
     <div
       style={{
