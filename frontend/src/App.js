@@ -9,18 +9,49 @@ function App() {
   const [game, setGame] = useState(new Chess());
   const [bestMove, setBestMove] = useState("e5");
   const [evaluation, setEvaluation] = useState("+0.7");
+  const [selectedState, setSelectedState] = useState(null);
 
   const whiteLog = [["e4", "+0.1"], ["Nf3", "+0.2"], ["Bc4", "+0.1"]];
   const blackLog = [["c5", "+0.2"], ["e6", "+0.7"], ["Nf6", "-0.7"]];
-  const [whiteSpellBook, setWhiteSpellBook] = useState([[2, 0], [2, 0]]);
-  const [blackSpellBook, setBlackSpellBook] = useState([[1, 1], [2, 0]]);
-  /*  function ondropPiece
-        change the game
-        call the function to get the best move possible, ask for the evaluation
-        add to whatever log the info from the previous
-        update the spellBook
-        change the game
-  */
+
+  const [whiteJumpLeft, setWhiteJumpLeft] = useState(2);
+  const [whiteJumpCooldown, setWhiteJumpCooldown] = useState(0);
+  const [whiteFreezeLeft, setWhiteFreezeLeft] = useState(5);
+  const [whiteFreezeCooldown, setWhiteFreezeCooldown] = useState(0);
+
+  const [blackJumpLeft, setBlackJumpLeft] = useState(2);
+  const [blackJumpCooldown, setBlackJumpCooldown] = useState(0);
+  const [blackFreezeLeft, setBlackFreezeLeft] = useState(5);
+  const [blackFreezeCooldown, setBlackFreezeCooldown] = useState(0);
+
+  const handlePieceClick = (piece) => {
+    if (selectedState === 'blackjump') {
+      console.log("Cast black jump spell on", piece);
+      setBlackJumpCooldown(3);
+      setBlackJumpLeft(blackJumpLeft - 1);
+      setSelectedState(null);
+    } else if (selectedState === 'whitejump') {
+      console.log("Cast white jump spell on", piece);
+      setWhiteJumpCooldown(3);
+      setWhiteJumpLeft(whiteJumpLeft - 1);
+      setSelectedState(null);
+    }
+  };
+
+  const handleSquareClick = (square) => {
+    if (selectedState === 'whitefreeze') {
+      console.log("Cast white freeze on", square);
+      setWhiteFreezeCooldown(3);
+      setWhiteFreezeLeft(whiteFreezeLeft - 1);
+      setSelectedState(null);
+    } else if (selectedState === 'blackfreeze') {
+      console.log("Cast black freeze on", square);
+      setBlackFreezeCooldown(3);
+      setBlackFreezeLeft(blackFreezeLeft - 1);
+      setSelectedState(null);
+    }
+  }
+
   return (
     <div
       style={{
@@ -44,16 +75,18 @@ function App() {
           <div className="chessboardRow">
             <div className="chessboardInner">
               <div className="spellbook">
-                <SpellBook spellBook={blackSpellBook}/>
+                <SpellBook side="black" freezeLeft={blackFreezeLeft} freezeCooldown={blackFreezeCooldown} jumpLeft={blackJumpLeft} jumpCooldown={blackJumpCooldown} setState={setSelectedState} state={selectedState}/>
               </div>
               <Chessboard
                 boardWidth={400}
                 position={game.fen()}
                 customDarkSquareStyle={{ backgroundColor: '#51870b' }}
                 customLightSquareStyle={{ backgroundColor: '#9beb34' }}
+                onSquareClick={handleSquareClick}
+                onPieceClick={handlePieceClick}
               />
               <div className="spellbook">
-                <SpellBook spellBook={whiteSpellBook}/>
+                <SpellBook side="white" freezeLeft={whiteFreezeLeft} freezeCooldown={whiteFreezeCooldown} jumpLeft={whiteJumpLeft} jumpCooldown={whiteJumpCooldown} setState={setSelectedState} state={selectedState}/>
               </div>
             </div>
             <div className="sidePanel">

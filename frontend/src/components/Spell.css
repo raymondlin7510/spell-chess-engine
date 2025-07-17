@@ -20,4 +20,9 @@
 .spellImage {
     width: 50px;
     height: auto;
+    transition: transform 0.2s ease-in-out;
+}
+
+.spellImage:hover {
+  transform: scale(1.1);
 }
