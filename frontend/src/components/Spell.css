@@ -7,10 +7,10 @@
     flex-direction: column;
     align-items: center;
     position: relative;
+    color: white;
 }
 
 .numLeft {
-    color: white;
     font-size: 20px;
     padding-right: 20px;
     border-color: black;
@@ -24,5 +24,11 @@
 }
 
 .spellImage:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
+}
+
+.spell.disabled {
+    filter: grayscale(100%) brightness(0.5);
+    cursor: not-allowed;
+    font-weight: bold;
 }

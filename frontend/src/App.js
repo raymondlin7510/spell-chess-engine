@@ -35,6 +35,8 @@ function App() {
       setWhiteJumpCooldown(3);
       setWhiteJumpLeft(whiteJumpLeft - 1);
       setSelectedState(null);
+    } else {
+      console.log("This is to show the next available areas that it can attack");
     }
   };
 
