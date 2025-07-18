@@ -1,9 +1,9 @@
 import Spell from "./Spell";
 import "./SpellBook.css";
 
-function SpellBook({ side, freezeLeft, freezeCooldown, jumpLeft, jumpCooldown, setState, state }) {
+function SpellBook({ side, freezeLeft, freezeCooldown, jumpLeft, jumpCooldown, setState, state, spellDown }) {
      const handleSpellClick = (spell) => {
-        if (state == null) {
+        if (spellDown == null && state == null) {
             setState(side + spell);
         } else {
             setState(null);

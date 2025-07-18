@@ -7,12 +7,18 @@ import "./App.css";
 
 function App() {
   const [game, setGame] = useState(new Chess());
-  const [bestMove, setBestMove] = useState("e5");
-  const [evaluation, setEvaluation] = useState("+0.7");
+  const [bestMove, setBestMove] = useState("");
+  const [evaluation, setEvaluation] = useState("");
   const [selectedState, setSelectedState] = useState(null);
+
+  const [spellDown, setSpellDown] = useState(null);
 
   const whiteLog = [["e4", "+0.1"], ["Nf3", "+0.2"], ["Bc4", "+0.1"]];
   const blackLog = [["c5", "+0.2"], ["e6", "+0.7"], ["Nf6", "-0.7"]];
+  
+  const [frozenSquares, setFrozenSquares] = useState(new Set());
+  const [jumpPieces, setJumpPieces] = useState(new Set());
+  const [moveSquares, setMoveSquares] = useState({});
 
   const [whiteJumpLeft, setWhiteJumpLeft] = useState(2);
   const [whiteJumpCooldown, setWhiteJumpCooldown] = useState(0);
@@ -24,34 +30,100 @@ function App() {
   const [blackFreezeLeft, setBlackFreezeLeft] = useState(5);
   const [blackFreezeCooldown, setBlackFreezeCooldown] = useState(0);
 
+  // need to fix freeze where you can put it on any chess piece or square
+  // need to include a cancel spell button
+  // need to show area where your cock is blocked when freeze is activated which shows a 3x3 blue area
+  // need to show piece that can be jumped yee haw
+
   const handlePieceClick = (piece) => {
-    if (selectedState === 'blackjump') {
-      console.log("Cast black jump spell on", piece);
-      setBlackJumpCooldown(3);
-      setBlackJumpLeft(blackJumpLeft - 1);
-      setSelectedState(null);
-    } else if (selectedState === 'whitejump') {
-      console.log("Cast white jump spell on", piece);
-      setWhiteJumpCooldown(3);
-      setWhiteJumpLeft(whiteJumpLeft - 1);
-      setSelectedState(null);
-    } else {
-      console.log("This is to show the next available areas that it can attack");
+    if (spellDown == null) {
+      if (selectedState === 'blackjump') {
+        setSpellDown(selectedState);
+        setBlackJumpCooldown(3);
+        setBlackJumpLeft(blackJumpLeft - 1);
+        setSelectedState(null);
+      } else if (selectedState === 'whitejump') {
+        setSpellDown(selectedState);
+        setWhiteJumpCooldown(3);
+        setWhiteJumpLeft(whiteJumpLeft - 1);
+        setSelectedState(null);
+      } else if (selectedState === 'blackfreeze') {
+        setSpellDown(selectedState);
+        setBlackFreezeCooldown(3);
+        setBlackFreezeLeft(blackFreezeLeft - 1);
+        setSelectedState(null);
+      } else if (selectedState === 'whitefreeze') {
+        setSpellDown(selectedState);
+        setWhiteFreezeCooldown(3);
+        setWhiteFreezeLeft(whiteFreezeLeft - 1);
+        setSelectedState(null);
+      }
     }
   };
 
   const handleSquareClick = (square) => {
-    if (selectedState === 'whitefreeze') {
-      console.log("Cast white freeze on", square);
-      setWhiteFreezeCooldown(3);
-      setWhiteFreezeLeft(whiteFreezeLeft - 1);
-      setSelectedState(null);
-    } else if (selectedState === 'blackfreeze') {
-      console.log("Cast black freeze on", square);
-      setBlackFreezeCooldown(3);
-      setBlackFreezeLeft(blackFreezeLeft - 1);
-      setSelectedState(null);
+    if (selectedState == null) {
+      const moves = game.moves({ square, verbose: true });
+      if (moves.length === 0) {
+        setMoveSquares({});
+        return;
+      }
+      const newMoveSquares = {};
+      for (const move of moves) {
+        newMoveSquares[move.to] = {
+          background:
+            move.flags.includes("c")
+              ? "radial-gradient(circle, red 35%, transparent 36%)"
+              : "radial-gradient(circle, rgba(0,255,0,0.5) 25%, transparent 26%)"
+        };
+      }
+      setMoveSquares(newMoveSquares);
     }
+    if (spellDown == null) {
+      if (selectedState === 'whitefreeze') {
+        setWhiteFreezeCooldown(3);
+        setWhiteFreezeLeft(whiteFreezeLeft - 1);
+        setSpellDown(selectedState);
+        setSelectedState(null);
+      } else if (selectedState === 'blackfreeze') {
+        setBlackFreezeCooldown(3);
+        setBlackFreezeLeft(blackFreezeLeft - 1);
+        setSpellDown(selectedState);
+        setSelectedState(null);
+      }
+    }
+  }
+
+  const handleCancelMove = () => {
+    if (spellDown == 'blackfreeze') {
+      setBlackFreezeCooldown(0);
+      setBlackFreezeLeft(blackFreezeLeft + 1);
+    } else if (spellDown == 'whitefreeze') {
+      setWhiteFreezeCooldown(0);
+      setWhiteFreezeLeft(whiteFreezeLeft + 1);
+    } else if (spellDown == 'blackjump') {
+      setBlackJumpCooldown(0);
+      setBlackJumpLeft(blackJumpLeft + 1);
+    } else if (spellDown == 'whitejump') {
+      setWhiteJumpCooldown(0);
+      setWhiteJumpLeft(whiteJumpLeft + 1);
+    }
+    setSpellDown(null);
+    setSelectedState(null);
+  }
+
+  const onDrop = (sourceSquare, targetSquare) => {
+    const move = game.move({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: "q",
+    });
+
+    if (move === null)  {
+      return false;
+    }
+    setGame(new Chess(game.fen()));
+    return true;
   }
 
   return (
@@ -77,18 +149,19 @@ function App() {
           <div className="chessboardRow">
             <div className="chessboardInner">
               <div className="spellbook">
-                <SpellBook side="black" freezeLeft={blackFreezeLeft} freezeCooldown={blackFreezeCooldown} jumpLeft={blackJumpLeft} jumpCooldown={blackJumpCooldown} setState={setSelectedState} state={selectedState}/>
+                <SpellBook side="black" freezeLeft={blackFreezeLeft} freezeCooldown={blackFreezeCooldown} jumpLeft={blackJumpLeft} jumpCooldown={blackJumpCooldown} setState={setSelectedState} state={selectedState} spellDown={spellDown}/>
               </div>
               <Chessboard
                 boardWidth={400}
                 position={game.fen()}
-                customDarkSquareStyle={{ backgroundColor: '#51870b' }}
-                customLightSquareStyle={{ backgroundColor: '#9beb34' }}
+                customDarkSquareStyle={{ backgroundImage: 'url("/images/darkGreenGrass.PNG")' }}
+                customLightSquareStyle={{ backgroundImage: 'url("/images/lightGreenGrass.PNG")' }}
                 onSquareClick={handleSquareClick}
                 onPieceClick={handlePieceClick}
+                onDrop={onDrop}
               />
               <div className="spellbook">
-                <SpellBook side="white" freezeLeft={whiteFreezeLeft} freezeCooldown={whiteFreezeCooldown} jumpLeft={whiteJumpLeft} jumpCooldown={whiteJumpCooldown} setState={setSelectedState} state={selectedState}/>
+                <SpellBook side="white" freezeLeft={whiteFreezeLeft} freezeCooldown={whiteFreezeCooldown} jumpLeft={whiteJumpLeft} jumpCooldown={whiteJumpCooldown} setState={setSelectedState} state={selectedState} spellDown={spellDown}/>
               </div>
             </div>
             <div className="sidePanel">
@@ -116,6 +189,12 @@ function App() {
             </div>
           </div>
         </div>
+        {spellDown != null && (
+          <div className="cancelButton" onClick={handleCancelMove}>
+            <img src={"/images/whiteArrow.webp"} alt="leftArrow" className="leftArrow" />
+            Cancel Move
+          </div>
+        )}
       </div>
     </div>
   );

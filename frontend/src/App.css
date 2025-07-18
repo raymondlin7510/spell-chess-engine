@@ -84,6 +84,23 @@ h1 {
   color: white;
 }
 
+.cancelButton {
+  background-color: lightgray;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+}
+
+.leftArrow {
+  transform: scaleX(-1);
+  width: 20px;
+  height: 20px;
+}
+
+
 
 .App-logo {
   height: 40vmin;
