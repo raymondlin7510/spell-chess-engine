@@ -31,7 +31,6 @@ function App() {
   const [blackFreezeCooldown, setBlackFreezeCooldown] = useState(0);
 
   // need to fix freeze where you can put it on any chess piece or square
-  // need to include a cancel spell button
   // need to show area where your cock is blocked when freeze is activated which shows a 3x3 blue area
   // need to show piece that can be jumped yee haw
 
@@ -63,6 +62,10 @@ function App() {
 
   const handleSquareClick = (square) => {
     if (selectedState == null) {
+      if (moveSquares.length > 0) {
+        setMoveSquares({});
+        return;
+      }
       const moves = game.moves({ square, verbose: true });
       if (moves.length === 0) {
         setMoveSquares({});
@@ -72,7 +75,7 @@ function App() {
       for (const move of moves) {
         newMoveSquares[move.to] = {
           background:
-            move.flags.includes("c")
+            move.isCapture
               ? "radial-gradient(circle, red 35%, transparent 36%)"
               : "radial-gradient(circle, rgba(0,255,0,0.5) 25%, transparent 26%)"
         };
@@ -95,16 +98,16 @@ function App() {
   }
 
   const handleCancelMove = () => {
-    if (spellDown == 'blackfreeze') {
+    if (spellDown === 'blackfreeze') {
       setBlackFreezeCooldown(0);
       setBlackFreezeLeft(blackFreezeLeft + 1);
-    } else if (spellDown == 'whitefreeze') {
+    } else if (spellDown === 'whitefreeze') {
       setWhiteFreezeCooldown(0);
       setWhiteFreezeLeft(whiteFreezeLeft + 1);
-    } else if (spellDown == 'blackjump') {
+    } else if (spellDown === 'blackjump') {
       setBlackJumpCooldown(0);
       setBlackJumpLeft(blackJumpLeft + 1);
-    } else if (spellDown == 'whitejump') {
+    } else if (spellDown === 'whitejump') {
       setWhiteJumpCooldown(0);
       setWhiteJumpLeft(whiteJumpLeft + 1);
     }
@@ -123,6 +126,7 @@ function App() {
       return false;
     }
     setGame(new Chess(game.fen()));
+    setMoveSquares({});
     return true;
   }
 
@@ -156,6 +160,7 @@ function App() {
                 position={game.fen()}
                 customDarkSquareStyle={{ backgroundImage: 'url("/images/darkGreenGrass.PNG")' }}
                 customLightSquareStyle={{ backgroundImage: 'url("/images/lightGreenGrass.PNG")' }}
+                customSquareStyles={moveSquares}
                 onSquareClick={handleSquareClick}
                 onPieceClick={handlePieceClick}
                 onDrop={onDrop}
