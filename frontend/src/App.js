@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
@@ -11,10 +10,7 @@ function App() {
   const [evaluation, setEvaluation] = useState("");
   const [selectedState, setSelectedState] = useState(null);
 
-  const [spellDown, setSpellDown] = useState(null);
-
-  const whiteLog = [["e4", "+0.1"], ["Nf3", "+0.2"], ["Bc4", "+0.1"]];
-  const blackLog = [["c5", "+0.2"], ["e6", "+0.7"], ["Nf6", "-0.7"]];
+  const [log, setLog] = useState([]);
   
   const [frozenSquares, setFrozenSquares] = useState(new Set());
   const [jumpPieces, setJumpPieces] = useState(new Set());
@@ -30,90 +26,96 @@ function App() {
   const [blackFreezeLeft, setBlackFreezeLeft] = useState(5);
   const [blackFreezeCooldown, setBlackFreezeCooldown] = useState(0);
 
-  // need to fix freeze where you can put it on any chess piece or square
-  // need to show area where your cock is blocked when freeze is activated which shows a 3x3 blue area
-  // need to show piece that can be jumped yee haw
+  // show something to indicate that this is a jump spell you can use
+  // show something to indicate that this is a frozen area
 
-  const handlePieceClick = (piece) => {
-    if (spellDown == null) {
-      if (selectedState === 'blackjump') {
-        setSpellDown(selectedState);
-        setBlackJumpCooldown(3);
-        setBlackJumpLeft(blackJumpLeft - 1);
-        setSelectedState(null);
-      } else if (selectedState === 'whitejump') {
-        setSpellDown(selectedState);
-        setWhiteJumpCooldown(3);
-        setWhiteJumpLeft(whiteJumpLeft - 1);
-        setSelectedState(null);
-      } else if (selectedState === 'blackfreeze') {
-        setSpellDown(selectedState);
-        setBlackFreezeCooldown(3);
-        setBlackFreezeLeft(blackFreezeLeft - 1);
-        setSelectedState(null);
-      } else if (selectedState === 'whitefreeze') {
-        setSpellDown(selectedState);
-        setWhiteFreezeCooldown(3);
-        setWhiteFreezeLeft(whiteFreezeLeft - 1);
-        setSelectedState(null);
+  /*
+
+  const handleGetMove = () => {
+  fetch("/get-move")
+    .then((res) => res.json())
+    .then((data) => {
+      setText(data.best_move);  // sets "e4"
+      console.log(data);
+    })
+    .catch((err) => console.error("Fetch error:", err));
+};
+*/
+
+
+  const handlePieceClick = (piece, square) => {
+    if (selectedState === 'blackjumpchoosing') {
+      setBlackJumpCooldown(3);
+      setBlackJumpLeft(blackJumpLeft - 1);
+      setSelectedState('blackjumpdown');
+    } else if (selectedState === 'whitejumpchoosing') {
+      setWhiteJumpCooldown(3);
+      setWhiteJumpLeft(whiteJumpLeft - 1);
+      setSelectedState('whitejumpdown');
+    } else if (selectedState === square + "seeingMoves") {
+      setMoveSquares({});
+      setSelectedState(null);
+    } else {
+      const moves = game.moves({ square, verbose: true });
+      const newMoveSquares = {};
+      for (const move of moves) {
+        const isCapture = !!move.captured;
+
+        newMoveSquares[move.to] = {
+          background: isCapture
+            ? "radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.5) 41%, rgba(0, 0, 0, 0.5) 53%, transparent 49%)"   
+            : "radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 22%, transparent 23%)"
+        };
       }
+      newMoveSquares[square] = {backgroundColor: "rgba(166, 255, 65, 0.82)"}
+      setMoveSquares(newMoveSquares);
+      setSelectedState(square + "seeingMoves");
     }
   };
 
   const handleSquareClick = (square) => {
-    if (selectedState == null) {
-      if (moveSquares.length > 0) {
-        setMoveSquares({});
-        return;
+    const piece = game.get(square);
+    if (game.get(square) != null) {
+      handlePieceClick(piece, square);
+    } else {
+      let seeingMovesIndex = -1;
+      if (selectedState != null) {
+        seeingMovesIndex = selectedState.indexOf('seeingMoves');
       }
-      const moves = game.moves({ square, verbose: true });
-      if (moves.length === 0) {
-        setMoveSquares({});
-        return;
-      }
-      const newMoveSquares = {};
-      for (const move of moves) {
-        newMoveSquares[move.to] = {
-          background:
-            move.isCapture
-              ? "radial-gradient(circle, red 35%, transparent 36%)"
-              : "radial-gradient(circle, rgba(0,255,0,0.5) 25%, transparent 26%)"
-        };
-      }
-      setMoveSquares(newMoveSquares);
-    }
-    if (spellDown == null) {
-      if (selectedState === 'whitefreeze') {
+      if (selectedState === 'whitefreezechoosing') {
         setWhiteFreezeCooldown(3);
         setWhiteFreezeLeft(whiteFreezeLeft - 1);
-        setSpellDown(selectedState);
-        setSelectedState(null);
-      } else if (selectedState === 'blackfreeze') {
+        setSelectedState('whitefreezedown');
+      } else if (selectedState === 'blackfreezechoosing') {
         setBlackFreezeCooldown(3);
         setBlackFreezeLeft(blackFreezeLeft - 1);
-        setSpellDown(selectedState);
+        setSelectedState('blackfreezedown');
+      } else if (seeingMovesIndex > -1) {
+        if (square in moveSquares) {
+          onDrop(selectedState.substring(0, seeingMovesIndex), square);
+        }
         setSelectedState(null);
       }
+      setMoveSquares({});
     }
-  }
+  };
 
   const handleCancelMove = () => {
-    if (spellDown === 'blackfreeze') {
+    if (selectedState === 'blackfreezedown') {
       setBlackFreezeCooldown(0);
       setBlackFreezeLeft(blackFreezeLeft + 1);
-    } else if (spellDown === 'whitefreeze') {
+    } else if (selectedState === 'whitefreezedown') {
       setWhiteFreezeCooldown(0);
       setWhiteFreezeLeft(whiteFreezeLeft + 1);
-    } else if (spellDown === 'blackjump') {
+    } else if (selectedState === 'blackjumpdown') {
       setBlackJumpCooldown(0);
       setBlackJumpLeft(blackJumpLeft + 1);
-    } else if (spellDown === 'whitejump') {
+    } else if (selectedState === 'whitejumpdown') {
       setWhiteJumpCooldown(0);
       setWhiteJumpLeft(whiteJumpLeft + 1);
     }
-    setSpellDown(null);
     setSelectedState(null);
-  }
+  };
 
   const onDrop = (sourceSquare, targetSquare) => {
     const move = game.move({
@@ -121,14 +123,15 @@ function App() {
       to: targetSquare,
       promotion: "q",
     });
-
     if (move === null)  {
       return false;
     }
+    log.push([move.san, "+0.1"]);
+    setLog(log);
     setGame(new Chess(game.fen()));
     setMoveSquares({});
     return true;
-  }
+  };
 
   return (
     <div
@@ -153,7 +156,7 @@ function App() {
           <div className="chessboardRow">
             <div className="chessboardInner">
               <div className="spellbook">
-                <SpellBook side="black" freezeLeft={blackFreezeLeft} freezeCooldown={blackFreezeCooldown} jumpLeft={blackJumpLeft} jumpCooldown={blackJumpCooldown} setState={setSelectedState} state={selectedState} spellDown={spellDown}/>
+                <SpellBook side="black" freezeLeft={blackFreezeLeft} freezeCooldown={blackFreezeCooldown} jumpLeft={blackJumpLeft} jumpCooldown={blackJumpCooldown} setState={setSelectedState} state={selectedState}/>
               </div>
               <Chessboard
                 boardWidth={400}
@@ -162,11 +165,10 @@ function App() {
                 customLightSquareStyle={{ backgroundImage: 'url("/images/lightGreenGrass.PNG")' }}
                 customSquareStyles={moveSquares}
                 onSquareClick={handleSquareClick}
-                onPieceClick={handlePieceClick}
                 onDrop={onDrop}
               />
               <div className="spellbook">
-                <SpellBook side="white" freezeLeft={whiteFreezeLeft} freezeCooldown={whiteFreezeCooldown} jumpLeft={whiteJumpLeft} jumpCooldown={whiteJumpCooldown} setState={setSelectedState} state={selectedState} spellDown={spellDown}/>
+                <SpellBook side="white" freezeLeft={whiteFreezeLeft} freezeCooldown={whiteFreezeCooldown} jumpLeft={whiteJumpLeft} jumpCooldown={whiteJumpCooldown} setState={setSelectedState} state={selectedState}/>
               </div>
             </div>
             <div className="sidePanel">
@@ -177,14 +179,18 @@ function App() {
               </div>
               <div className="moveLogsContainer">
                   <div className="log">
-                    {whiteLog.map((move, index) => (
+                    {log
+                      .filter((_, index) => index % 2 === 0)
+                      .map((move, index) => (
                       <div key={index}>
                         {move[0]}: {move[1]}
                       </div>
                     ))}
                   </div>
                   <div className="log">
-                    {blackLog.map((move, index) => (
+                    {log
+                    .filter((_, index) => index % 2 === 1)
+                    .map((move, index) => (
                       <div key={index}>
                         {move[0]}: {move[1]}
                       </div>
@@ -194,7 +200,7 @@ function App() {
             </div>
           </div>
         </div>
-        {spellDown != null && (
+        {selectedState != null && selectedState.indexOf('down') > -1 && (
           <div className="cancelButton" onClick={handleCancelMove}>
             <img src={"/images/whiteArrow.webp"} alt="leftArrow" className="leftArrow" />
             Cancel Move

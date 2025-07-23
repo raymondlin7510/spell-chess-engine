@@ -1,10 +1,10 @@
 import Spell from "./Spell";
 import "./SpellBook.css";
 
-function SpellBook({ side, freezeLeft, freezeCooldown, jumpLeft, jumpCooldown, setState, state, spellDown }) {
+function SpellBook({ side, freezeLeft, freezeCooldown, jumpLeft, jumpCooldown, setState, state }) {
      const handleSpellClick = (spell) => {
-        if (spellDown == null && state == null) {
-            setState(side + spell);
+        if (state == null || state === 'seeingMoves') {
+            setState(side + spell + 'choosing');
         } else {
             setState(null);
         }
