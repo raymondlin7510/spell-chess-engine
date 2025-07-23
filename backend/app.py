@@ -1,10 +1,8 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, jsonify
 
 #import chess (need to download this first) maybe we'll use it
 
 app = Flask(__name__)
-CORS(app)  # allow requests from your React frontend
 
 class SearchNode: # runs the search algorithm on a tree node
     def eval_guess(board):
@@ -58,7 +56,7 @@ class SearchNode: # runs the search algorithm on a tree node
             
             # generate freeze children
 
-@app.route('/api/get_eval_and_move', methods=['GET'])
+@app.route('/get_eval_and_move', methods=['GET'])
 def get_eval_and_move():
     # board 2d array, 
     # which spell is active = 0, 1, 2 (0 means no spell, 1 means jump spell, 2 means freeze), 
@@ -74,7 +72,10 @@ def get_eval_and_move():
     # black number of freezes
     # who's turn is it
     
-    return 0
+    # make sure that when we do deploy the app, make sure that we update the app route to be website/get_eval_and_move
+    # make sure that when we do deploy the app, make sure that we also update package.json proxy as well
+    return jsonify("Hello from Flask")
+
 
 if __name__ == '__main__':
-    app.run(port=8000, debug=True)
+    app.run(debug=True)
