@@ -1,16 +1,80 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+#import chess (need to download this first) maybe we'll use it
+
 app = Flask(__name__)
 CORS(app)  # allow requests from your React frontend
 
-@app.route('/api/get-move', methods=['POST'])
-def get_ai_move():
-    data = request.get_json()
-    fen = data.get("fen", "")
-    move = "e2e4"
-    return jsonify({"move": move})
+class SearchNode: # runs the search algorithm on a tree node
+    def eval_guess(board):
+        # guess the eval based on the board
+        return 0
+    
+    #jc = [wjc, bjc]
+    #instead of referring to wjc, jc[0], instead of bjc, jc[1]. jc[turn], turn is 0 for white, 1 for black
+    #jc[turn] to get my own cooldown, jc[1 - turn] to get opponent's cooldown
 
+    def __init__(self, board, wjc, wnj, wfc, wnf, bjc, bnj, bfc, bnf, turn, depth):
+        self.board = board # (2-d array)
+        self.wjc = wjc # white jump cooldown
+        self.wnj = wnj # white num jumps
+        self.wfc = wfc # white freeze cooldown
+        self.wnf = wnf # white num freezes
+        self.bjc = bjc # black jump cooldown
+        self.bnj = bnj # black num jumps
+        self.bfc = bfc # black freeze cooldown
+        self.bnf = bnf # black num freezes
+        self.turn = turn
+        self.depth = depth
+        self.normal_children = []
+        self.jump_children = [] # empty if jump spell is on cooldown or no spells left
+        self.freeze_children = [] # empty if freeze spell is on cooldown or no spells left
+        self.evaluation = self.eval_guess(board)
+
+    def generate_normal_and_jump_children(self): #chess moves w/o freezes
+        for:
+            #woah this piece is a rook:
+                #there's a black pawn two squares in from of the white rook
+                #add "move rook one square forward" to normal children
+                #add "capture black pawn, moving rook two squares forward" to normal children
+                if can_use_jump_spell(): 
+                    #add "use jump spell on pawn, moving rook three squares forward" to normal children
+                    #add "use jump spell on pawn, moving rook four squares forward" to normal children
+                    #etc
+                else:
+                    #do nothing
+
+    def generate_children(self): #chess moves (including spells)
+        self.generate_normal_and_jump_children()
+        self.eval_normal()
+        if self.depth >= 3:
+            for every normal move:
+                for every freeze square:
+                    # freeze_eval_upper_bound is for sure greater than true_eval
+                    # freeze_eval_upper_bound is approx true_eval + 7
+                    if freeze_eval_upper_bound >= best_normal_eval + 6
+                        #self.freeze_children.append(new SearchNode(board, ))
+            
+            # generate freeze children
+
+@app.route('/api/get_eval_and_move', methods=['GET'])
+def get_eval_and_move():
+    # board 2d array, 
+    # which spell is active = 0, 1, 2 (0 means no spell, 1 means jump spell, 2 means freeze), 
+    # jump/freeze: center of where is the spell active, 
+    # freeze spell: which squares are frozen (empty array if not active)
+    # white jump cooldown
+    # white number of jumps
+    # white freeze cooldown
+    # white number of freezes
+    # black jump cooldown
+    # black number of jumps
+    # black freeze cooldown
+    # black number of freezes
+    # who's turn is it
+    
+    return 0
 
 if __name__ == '__main__':
     app.run(port=8000, debug=True)
