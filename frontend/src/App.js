@@ -10,24 +10,36 @@ function App() {
   const [evaluation, setEvaluation] = useState("");
   const [selectedState, setSelectedState] = useState(null);
 
+  const [turn, setTurn] = useState(0);
   const [log, setLog] = useState([]);
   
-  const [frozenSquares, setFrozenSquares] = useState(new Set());
-  const [jumpPieces, setJumpPieces] = useState(new Set());
   const [moveSquares, setMoveSquares] = useState({});
 
-  const [whiteJumpLeft, setWhiteJumpLeft] = useState(2);
-  const [whiteJumpCooldown, setWhiteJumpCooldown] = useState(0);
-  const [whiteFreezeLeft, setWhiteFreezeLeft] = useState(5);
-  const [whiteFreezeCooldown, setWhiteFreezeCooldown] = useState(0);
+  const [spellState, setSpellState] = useState(null);
+  const [frozenSquares, setFrozenSquares] = useState([{}, {}]);
+  const [jumpSquares, setJumpSquares] = useState([{}, {}]);
 
-  const [blackJumpLeft, setBlackJumpLeft] = useState(2);
-  const [blackJumpCooldown, setBlackJumpCooldown] = useState(0);
-  const [blackFreezeLeft, setBlackFreezeLeft] = useState(5);
-  const [blackFreezeCooldown, setBlackFreezeCooldown] = useState(0);
+  const [jumpLeft, setJumpLeft] = useState([2, 2]);
+  const [jumpCooldown, setJumpCooldown] = useState([0, 0]);
+  const [freezeLeft, setFreezeLeft] = useState([5, 5]);
+  const [freezeCooldown, setFreezeCooldown] = useState([0, 0]);
 
-  // show something to indicate that this is a jump spell you can use
-  // show something to indicate that this is a frozen area
+  const jumpPieceStyle = {
+    backgroundImage: 'url("/images/jumpAnimation.gif")',
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    opacity: 0.5,
+  };
+
+  const frozenStyle = {
+    backgroundImage: 'url("/images/snowAnimation.gif")',
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    opacity: 0.5
+  };
+
 
   /*
 
@@ -44,23 +56,31 @@ function App() {
 
 
   const handlePieceClick = (piece, square) => {
-    if (selectedState === 'blackjumpchoosing') {
-      setBlackJumpCooldown(3);
-      setBlackJumpLeft(blackJumpLeft - 1);
-      setSelectedState('blackjumpdown');
-    } else if (selectedState === 'whitejumpchoosing') {
-      setWhiteJumpCooldown(3);
-      setWhiteJumpLeft(whiteJumpLeft - 1);
-      setSelectedState('whitejumpdown');
-    } else if (selectedState === square + "seeingMoves") {
-      setMoveSquares({});
-      setSelectedState(null);
+    if (selectedState) {
+      if (selectedState === square + "seeingMoves") {
+        setMoveSquares({});
+        setSelectedState(null);
+      } else if (square in moveSquares) {
+        onDrop(selectedState.substring(0, 2), square);
+      } else {
+        if (selectedState === 'jumpchoosing') {
+          jumpCooldown[turn] = 3;
+          setJumpCooldown(jumpCooldown);
+          jumpLeft[turn] -= 1;
+          setJumpLeft(jumpLeft);
+          setSelectedState(null);
+          jumpSquares[turn][square] = jumpPieceStyle;
+          setJumpSquares(jumpSquares);
+          setSpellState('jumpdown');
+        } else if (selectedState === 'freezechoosing') {
+          putFreeze(square);
+        }
+      }
     } else {
       const moves = game.moves({ square, verbose: true });
       const newMoveSquares = {};
       for (const move of moves) {
         const isCapture = !!move.captured;
-
         newMoveSquares[move.to] = {
           background: isCapture
             ? "radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.5) 41%, rgba(0, 0, 0, 0.5) 53%, transparent 49%)"   
@@ -77,47 +97,77 @@ function App() {
     const piece = game.get(square);
     if (game.get(square) != null) {
       handlePieceClick(piece, square);
-    } else {
-      let seeingMovesIndex = -1;
-      if (selectedState != null) {
-        seeingMovesIndex = selectedState.indexOf('seeingMoves');
-      }
-      if (selectedState === 'whitefreezechoosing') {
-        setWhiteFreezeCooldown(3);
-        setWhiteFreezeLeft(whiteFreezeLeft - 1);
-        setSelectedState('whitefreezedown');
-      } else if (selectedState === 'blackfreezechoosing') {
-        setBlackFreezeCooldown(3);
-        setBlackFreezeLeft(blackFreezeLeft - 1);
-        setSelectedState('blackfreezedown');
-      } else if (seeingMovesIndex > -1) {
-        if (square in moveSquares) {
-          onDrop(selectedState.substring(0, seeingMovesIndex), square);
-        }
-        setSelectedState(null);
-      }
-      setMoveSquares({});
     }
+    if (selectedState === 'freezechoosing') {
+      putFreeze(square);
+    } else if (selectedState === 'seeingMoves') {
+      if (square in moveSquares) {
+        onDrop(selectedState.substring(0, 2), square);
+      }
+      setSelectedState(null);
+    }
+  };
+
+  const putFreeze = (square) => {
+    setSpellState('freezedown');
+    freezeCooldown[turn] = 3;
+    setFreezeCooldown(freezeCooldown);
+    freezeLeft[turn] -= 1;
+    setFreezeLeft(freezeLeft);
+    setSelectedState(null);
+    const currTurnSquares = frozenSquares[turn];
+    currTurnSquares[square] = frozenStyle;
+    const file = square[0];
+    const rank = parseInt(square[1]);
+    if (file > 'a') {
+      currTurnSquares[String.fromCharCode(file.charCodeAt(0) - 1) + rank] = frozenStyle;
+      if (rank < 8) {
+        currTurnSquares[file + (rank + 1)] = frozenStyle;
+        currTurnSquares[String.fromCharCode(file.charCodeAt(0) - 1) + (rank + 1)] = frozenStyle;
+      }
+      if (rank > 1) {
+        currTurnSquares[file + (rank - 1)] = frozenStyle;
+        currTurnSquares[String.fromCharCode(file.charCodeAt(0) - 1) + (rank - 1)] = frozenStyle;
+      }
+    }
+    if (file < 'h') {
+      currTurnSquares[String.fromCharCode(file.charCodeAt(0) + 1) + rank] = frozenStyle;
+      if (rank < 8) {
+        currTurnSquares[file + (rank + 1)] = frozenStyle;
+        currTurnSquares[String.fromCharCode(file.charCodeAt(0) + 1) + (rank + 1)] =frozenStyle;
+      }
+      if (rank > 1) {
+        currTurnSquares[file + (rank - 1)] = frozenStyle;
+        currTurnSquares[String.fromCharCode(file.charCodeAt(0) + 1) + (rank - 1)] = frozenStyle;
+      }
+    }
+    frozenSquares[turn] = currTurnSquares;
+    setFrozenSquares(frozenSquares);
   };
 
   const handleCancelMove = () => {
-    if (selectedState === 'blackfreezedown') {
-      setBlackFreezeCooldown(0);
-      setBlackFreezeLeft(blackFreezeLeft + 1);
-    } else if (selectedState === 'whitefreezedown') {
-      setWhiteFreezeCooldown(0);
-      setWhiteFreezeLeft(whiteFreezeLeft + 1);
-    } else if (selectedState === 'blackjumpdown') {
-      setBlackJumpCooldown(0);
-      setBlackJumpLeft(blackJumpLeft + 1);
-    } else if (selectedState === 'whitejumpdown') {
-      setWhiteJumpCooldown(0);
-      setWhiteJumpLeft(whiteJumpLeft + 1);
+    if (spellState === 'freezedown') {
+      frozenSquares[turn] = {};
+      setFrozenSquares(frozenSquares);
+      freezeCooldown[turn] = 0;
+      setFreezeCooldown(freezeCooldown);
+      freezeLeft[turn] += 1;
+      setFreezeLeft(freezeLeft);
+    } else if (spellState === 'jumpdown') {
+      jumpSquares[turn] = {};
+      setJumpSquares(jumpSquares);
+      jumpCooldown[turn] = 0;
+      setJumpCooldown(jumpCooldown);
+      jumpLeft[turn] += 1;
+      setJumpLeft(jumpLeft);
     }
-    setSelectedState(null);
+    setSpellState(null);
   };
 
   const onDrop = (sourceSquare, targetSquare) => {
+    if (sourceSquare in frozenSquares) {
+      return false;
+    }
     const move = game.move({
       from: sourceSquare,
       to: targetSquare,
@@ -130,6 +180,12 @@ function App() {
     setLog(log);
     setGame(new Chess(game.fen()));
     setMoveSquares({});
+    setTurn(1 - turn);
+    setSpellState(null);
+    frozenSquares[turn] = {};
+    setFrozenSquares(frozenSquares);
+    jumpSquares[turn] = {};
+    setJumpSquares(jumpSquares);
     return true;
   };
 
@@ -156,19 +212,19 @@ function App() {
           <div className="chessboardRow">
             <div className="chessboardInner">
               <div className="spellbook">
-                <SpellBook side="black" freezeLeft={blackFreezeLeft} freezeCooldown={blackFreezeCooldown} jumpLeft={blackJumpLeft} jumpCooldown={blackJumpCooldown} setState={setSelectedState} state={selectedState}/>
+                <SpellBook turn={turn} side="black" setMoveSquares={setMoveSquares} spellDown={spellState} setState={setSelectedState} freezeLeft={freezeLeft[1]} freezeCooldown={freezeCooldown[1]} jumpLeft={jumpLeft[1]} jumpCooldown={jumpCooldown[1]}/>
               </div>
               <Chessboard
                 boardWidth={400}
                 position={game.fen()}
                 customDarkSquareStyle={{ backgroundImage: 'url("/images/darkGreenGrass.PNG")' }}
                 customLightSquareStyle={{ backgroundImage: 'url("/images/lightGreenGrass.PNG")' }}
-                customSquareStyles={moveSquares}
+                customSquareStyles={{ ...moveSquares, ...frozenSquares[0], ...frozenSquares[1], ...jumpSquares[0], ...jumpSquares[1] }}
                 onSquareClick={handleSquareClick}
                 onDrop={onDrop}
               />
               <div className="spellbook">
-                <SpellBook side="white" freezeLeft={whiteFreezeLeft} freezeCooldown={whiteFreezeCooldown} jumpLeft={whiteJumpLeft} jumpCooldown={whiteJumpCooldown} setState={setSelectedState} state={selectedState}/>
+                <SpellBook turn={turn} side="white" setMoveSquares={setMoveSquares} spellDown={spellState} setState={setSelectedState} freezeLeft={freezeLeft[0]} freezeCooldown={freezeCooldown[0]} jumpLeft={jumpLeft[0]} jumpCooldown={jumpCooldown[0]}/>
               </div>
             </div>
             <div className="sidePanel">
@@ -200,7 +256,7 @@ function App() {
             </div>
           </div>
         </div>
-        {selectedState != null && selectedState.indexOf('down') > -1 && (
+        {spellState && (
           <div className="cancelButton" onClick={handleCancelMove}>
             <img src={"/images/whiteArrow.webp"} alt="leftArrow" className="leftArrow" />
             Cancel Move
