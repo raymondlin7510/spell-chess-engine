@@ -13,22 +13,19 @@ class SearchNode: # runs the search algorithm on a tree node
     #instead of referring to wjc, jc[0], instead of bjc, jc[1]. jc[turn], turn is 0 for white, 1 for black
     #jc[turn] to get my own cooldown, jc[1 - turn] to get opponent's cooldown
 
-    def __init__(self, board, wjc, wnj, wfc, wnf, bjc, bnj, bfc, bnf, turn, depth):
+    def __init__(self, board, jc, nj, fc, nf, turn, depth, best_eval):
         self.board = board # (2-d array)
-        self.wjc = wjc # white jump cooldown
-        self.wnj = wnj # white num jumps
-        self.wfc = wfc # white freeze cooldown
-        self.wnf = wnf # white num freezes
-        self.bjc = bjc # black jump cooldown
-        self.bnj = bnj # black num jumps
-        self.bfc = bfc # black freeze cooldown
-        self.bnf = bnf # black num freezes
+        self.jc = jc # white/black jump cooldown
+        self.nj = nj # white/black num jumps
+        self.fc = fc # white/black freeze cooldown
+        self.nf = nf # white/black num freezes
         self.turn = turn
         self.depth = depth
         self.normal_children = []
         self.jump_children = [] # empty if jump spell is on cooldown or no spells left
         self.freeze_children = [] # empty if freeze spell is on cooldown or no spells left
         self.evaluation = self.eval_guess(board)
+        self.best_eval = best_eval
 
     def generate_normal_and_jump_children(self): #chess moves w/o freezes
         for:
@@ -53,6 +50,7 @@ class SearchNode: # runs the search algorithm on a tree node
                     # freeze_eval_upper_bound is approx true_eval + 7
                     if freeze_eval_upper_bound >= best_normal_eval + 6
                         #self.freeze_children.append(new SearchNode(board, ))
+        
             
             # generate freeze children
 
@@ -74,6 +72,9 @@ def get_eval_and_move():
     
     # make sure that when we do deploy the app, make sure that we update the app route to be website/get_eval_and_move
     # make sure that when we do deploy the app, make sure that we also update package.json proxy as well
+    min_eval = -10000
+    depth = 7
+    search_root = SearchNode([wjc, bjc], [wnj, bnj], [wfc, bfc], [wnf, bnf], turn, depth, min_eval)
     return jsonify("Hello from Flask")
 
 
