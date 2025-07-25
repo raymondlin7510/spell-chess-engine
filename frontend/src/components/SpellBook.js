@@ -1,13 +1,13 @@
 import Spell from "./Spell";
 import "./SpellBook.css";
 
-function SpellBook({ side, freezeLeft, freezeCooldown, jumpLeft, jumpCooldown, setState, state }) {
+function SpellBook({ turn, side, setMoveSquares, spellState, setState, freezeLeft, freezeCooldown, jumpLeft, jumpCooldown }) {
      const handleSpellClick = (spell) => {
-        if (state == null || state === 'seeingMoves') {
-            setState(side + spell + 'choosing');
-        } else {
-            setState(null);
+        if (spellState != null || (turn === 1 && side === "white") || (turn === 0 && side === "black")) {
+            return;
         }
+        setMoveSquares({});
+        setState(spell + "choosing");
     };
 
     return (
